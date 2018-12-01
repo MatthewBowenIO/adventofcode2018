@@ -1,5 +1,4 @@
 # Advent of code day 1 -- A: 219
-from joblib import Parallel, delayed
 from distutils import util
 import multiprocessing, time, argparse
 
@@ -9,10 +8,7 @@ def durationSince(sTime):
 def search(needle, haystack):
     return needle in haystack
 
-def parallelSearchJobLib(needle, haystack, cc, s):
-    return Parallel(n_jobs = cc)(delayed(search)(needle, haystack[i if i == 0 else len(haystack) / i: i + s]) for i in range(cc))
-
-def parallelSearchMultiprocessing(pool, needle, haystack, cc ,s):
+def parallelSearch(pool, needle, haystack, cc ,s):
     results = [pool.apply_async(search, args = (needle, haystack[i if i == 0 else len(haystack) / i: i + s])) for i in range(cc)]
     results = [p.get() for p in results]
     return results
@@ -43,10 +39,10 @@ def main():
             searchStart = time.time()
             if (not util.strtobool(args.runParallel)) or (util.strtobool(args.runParallel) and previousExecutionTime < 0.00075):
                 if search(freq, freqs): 
-                    print("Dupe: %d \nExecution Time: %s seconds" % (freq, durationSince(searchStart)))
+                    print("Dupe: %d \nExecution Time: %s seconds" % (freq, durationSince(executionStart)))
                     break
             else:
-                if(True in parallelSearchMultiprocessing(pool, freq, freqs, cc, len(freqs) / cc)):
+                if(True in parallelSearch(pool, freq, freqs, cc, len(freqs) / cc)):
                     print("Dupe: %d \nExecution Time: %s seconds" % (freq, durationSince(executionStart)))
                     break
         else:
