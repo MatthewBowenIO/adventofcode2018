@@ -8,6 +8,19 @@ def durationSince(sTime):
 def search(needle, haystack):
     return needle in haystack
 
+def binarySearch(needle, haystack):
+    if len(haystack) == 0:
+        return False
+    else:
+        midstack = len(haystack)//2
+        if haystack[midstack] == needle:
+            return True
+        else:
+            if needle < haystack[midstack]:
+                return binarySearch(needle, haystack[:midstack])
+            else:
+                return binarySearch(needle, haystack[midstack+1:])
+
 def parallelSearch(pool, needle, haystack, cc ,s):
     results = [pool.apply_async(search, args = (needle, haystack[i if i == 0 else len(haystack) / i: i + s])) for i in range(cc)]
     results = [p.get() for p in results]
@@ -28,21 +41,21 @@ def main():
         ifile.close()
 
     freq = 0
-    freqs = []
+    freqs = set()
     executionStart = time.time()
     previousExecutionTime = 0.0
     while True:
         for i in calibration:
-            freqs.append(freq)
+            freqs.add(freq)
             freq += int(i)
 
             searchStart = time.time()
-            if (not util.strtobool(args.runParallel)) or (util.strtobool(args.runParallel) and previousExecutionTime < 0.00075):
+            if not util.strtobool(args.runParallel):
                 if search(freq, freqs): 
                     print("Dupe: %d \nExecution Time: %s seconds" % (freq, durationSince(executionStart)))
                     break
             else:
-                if(True in parallelSearch(pool, freq, freqs, cc, len(freqs) / cc)):
+                if True in parallelSearch(pool, freq, freqs, cc, len(freqs) / cc):
                     print("Dupe: %d \nExecution Time: %s seconds" % (freq, durationSince(executionStart)))
                     break
         else:
